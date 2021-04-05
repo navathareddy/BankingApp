@@ -1,0 +1,19 @@
+function Store(store) {
+  return {
+    setItem: (key, item) => {
+      if(!key) {
+        return null;
+      }
+      return store.setItem(key, JSON.stringify(item));
+    },
+    getItem: (key) => {
+      if(!key) {
+        return null;
+      }
+      return JSON.parse(store.getItem(key));
+    },
+    clear: () => {
+      return store.clear();
+    }
+  }
+}
