@@ -1,0 +1,88 @@
+var columnDefs = [
+    {
+        field: 'group',
+        rowGroup: true,
+        hide: true
+    },
+    {
+        field: 'autoA',
+        width: 300
+    },
+    {
+        field: 'autoB',
+        width: 300
+    },
+    {
+        field: 'autoC',
+        width: 300
+    }
+];
+
+let store = new Store(window.localStorage);
+const OPEN_GROUP_KEY = "openGroups";
+
+function initialiseGroupStore() {
+  let groups = store.getItem(OPEN_GROUP_KEY);
+  if(!groups) groups = [];
+  store.setItem(OPEN_GROUP_KEY, groups);
+}
+initialiseGroupStore();
+
+function addGroupToStore(id) {
+  let groups = store.getItem(OPEN_GROUP_KEY);
+  if(groups.indexOf(id) > -1) {
+    return;
+  }
+  groups.push(id);
+  store.setItem(OPEN_GROUP_KEY, groups);
+}
+
+function removeGroupFromStore(id) {
+  let groups = store.getItem(OPEN_GROUP_KEY);
+  let index = groups.indexOf(id);
+  if(index > -1) {
+    groups.splice(index, 1);
+  }
+  store.setItem(OPEN_GROUP_KEY, groups);
+}
+
+function openStoredGroups() {
+  let groups = store.getItem(OPEN_GROUP_KEY);
+  groups.forEach(groupId => {
+    let node = gridOptions.api.getRowNode(groupId);
+    node.setExpanded(true);
+  });
+}
+
+var gridOptions = {
+    defaultColDef: {
+        width: 100
+    },
+    columnDefs: columnDefs,
+    enableColResize: true,
+    rowModelType: 'serverSide',
+    animateRows: true,
+    serverSideDatasource: new SimpleDatasource(),
+    icons: {
+        groupLoading: '<img src="https://raw.githubusercontent.com/ag-grid/ag-grid-docs/master/src/javascript-grid-server-side-model/spinner.gif" style="width:22px;height:22px;">'
+    },
+    onRowGroupOpened: function(params) {
+      if(params.node.expanded) {
+        addGroupToStore(params.node.id);
+      } else {
+        removeGroupFromStore(params.node.id);
+      }
+      console.log(store.getItem(OPEN_GROUP_KEY));
+    },
+    onGridReady:(params) => {
+      setTimeout(()=> {
+        openStoredGroups();
+      })
+    }
+};
+
+// setup the grid after the page has finished loading
+document.addEventListener('DOMContentLoaded', function() {
+    var gridDiv = document.querySelector('#myGrid');
+    new agGrid.Grid(gridDiv, gridOptions);
+});
