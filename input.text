@@ -1,0 +1,85 @@
+import React, { SyntheticEvent, useState } from "react";
+import { TextField } from "@material-ui/core";
+import NumberFormat from "react-number-format";
+
+interface NumberFormatCustomProps {
+  inputRef: (instance: NumberFormat | null) => void;
+  onChange: (event: { target: { name: string; value: string } }) => void;
+  name: string;
+}
+
+function NumberFormatCustom(props: NumberFormatCustomProps) {
+  const { inputRef, onChange, ...other } = props;
+
+  return (
+    <NumberFormat
+      {...other}
+      getInputRef={inputRef}
+      onValueChange={(values) => {
+        onChange({
+          target: {
+            name: props.name,
+            value: values.value,
+          },
+        });
+      }}
+      thousandSeparator
+      isNumericString
+      prefix="$"
+    />
+  );
+}
+
+const blurChange = (
+  e: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>
+) => {
+  let number: string[] = [];
+  let groundNumber: string;
+  let intGround: number;
+  number.push(e.target.value);
+  try {
+    number = number[0].split(".");
+    groundNumber = number[0].replace("$", "");
+    groundNumber = groundNumber.replaceAll(",", "");
+    intGround = parseInt(groundNumber);
+    let decimal: string = number[1];
+    let decimalNumber: number = parseInt(decimal.substring(0, 1));
+    if (decimalNumber >= 5) {
+      intGround += 1;
+      return intGround;
+    } else {
+      return intGround;
+    }
+  } catch {
+    return -1;
+  }
+};
+
+export default function Input(props: any) {
+  const { name, label, value, error = null, onChange } = props;
+  const [number, setNumber] = useState<number | null>();
+  //console.log(typeof value);
+  return (
+    <TextField
+      variant="outlined"
+      label={label}
+      name={name}
+      value={number == null ? value : number}
+      onChange={onChange}
+      InputProps={{
+        inputComponent: NumberFormatCustom as any,
+      }}
+      onBlur={(e) => {
+        let number: number = blurChange(e);
+        if (number == -1) {
+          setNumber(value);
+        } else {
+          setNumber(number);
+        }
+      }}
+      onFocus={(e) => {
+        setNumber(null);
+      }}
+    />
+  );
+}
